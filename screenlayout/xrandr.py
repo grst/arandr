@@ -1,16 +1,16 @@
 # ARandR -- Another XRandR GUI
 # Copyright (C) 2008 -- 2011 chrysn <chrysn@fsfe.org>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -27,8 +27,10 @@ gettext.install('arandr')
 
 SHELLSHEBANG='#!/bin/sh'
 
+
 class Feature(object):
     PRIMARY = 1
+
 
 class XRandR(object):
     DEFAULTTEMPLATE = [SHELLSHEBANG, '%(xrandr)s']
@@ -97,7 +99,7 @@ class XRandR(object):
             raise FileSyntaxError()
         options = dict((a[0], a[1:]) for a in args.split('--output') if a) # first part is empty, exclude empty parts
 
-        for on,oa in options.items():
+        for on, oa in options.items():
             o = self.configuration.outputs[on]
             os = self.state.outputs[on]
             o.primary = False
@@ -129,15 +131,26 @@ class XRandR(object):
                         raise FileSyntaxError()
                 o.active = True
 
-    def load_from_x(self): # FIXME -- use a library
+    def load_from_x(self, xrandr_output=None):  # FIXME -- use a library
+        """
+        Load screen configuration from current settings.
+
+        Args:
+            xrandr_output: output of `xrandr --verbose`. If None, will
+                execute `xrandr --verbose`.
+
+        """
+        if xrandr_output is None:
+            xrandr_output = self._output("--verbose")
+
         self.configuration = self.Configuration(self)
         self.state = self.State()
 
-        screenline, items = self._load_raw_lines()
+        screenline, items = self._parse_raw_lines(xrandr_output)
 
         self._load_parse_screenline(screenline)
 
-        for headline,details in items:
+        for headline, details in items:
             if headline.startswith("  "): continue # a currently disconnected part of the screen i can't currently get any info out of
             if headline == "": continue # noise
 
@@ -199,15 +212,21 @@ class XRandR(object):
             self.state.outputs[o.name] = o
             self.configuration.outputs[o.name] = self.configuration.OutputConfiguration(active, primary, geometry, rotation, currentname)
 
-    def _load_raw_lines(self):
-        output = self._output("--verbose")
+    def _parse_raw_lines(self, xrandr_output=None):
+        """
+        parse xrandr output.
+
+        Args:
+            xrandr_output: text to parse
+        """
         items = []
         screenline = None
-        for l in output.split('\n'):
+        for l in xrandr_output.split('\n'):
             if l.startswith("Screen "):
                 assert screenline is None
                 screenline = l
             elif l.startswith('\t'):
+                # TODO edid parser
                 continue
             elif l.startswith(2*' '): # [mode, width, height]
                 l = l.strip()
@@ -286,7 +305,7 @@ class XRandR(object):
             self.outputs = {}
 
         def __repr__(self):
-            return '<%s for %d Outputs, %d connected>'%(type(self).__name__, len(self.outputs), len([x for x in self.outputs.values() if x.connected]))
+            return '<%s for %d Outputs, %d connected>' % (type(self).__name__, len(self.outputs), len([x for x in self.outputs.values() if x.connected]))
 
         class Virtual(object):
             def __init__(self, min, max):
@@ -299,10 +318,11 @@ class XRandR(object):
                 self.modes = []
 
             def __repr__(self):
-                return '<%s %r (%d modes)>'%(type(self).__name__, self.name, len(self.modes))
+                return '<%s %r (%d modes)>' % (type(self).__name__, self.name, len(self.modes))
 
     class Configuration(object):
-        """Represents everything that can be set by xrandr (and is therefore subject to saving and loading from files)"""
+        """Represents everything that can be set by xrandr
+        (and is therefore subject to saving and loading from files)"""
         def __init__(self, xrandr):
             self.outputs = {}
             self._xrandr = xrandr
