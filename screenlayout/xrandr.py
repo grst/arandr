@@ -150,7 +150,8 @@ class XRandR(object):
 
         self._load_parse_screenline(screenline)
 
-        for headline, details in items:
+        for item in items:
+            headline = item['headline']
             if headline.startswith("  "): continue # a currently disconnected part of the screen i can't currently get any info out of
             if headline == "": continue # noise
 
@@ -160,6 +161,9 @@ class XRandR(object):
             assert hsplit[1] in ("connected","disconnected", 'unknown-connection')
 
             o.connected = (hsplit[1] in ('connected', 'unknown-connection'))
+
+            if item['EDID'] is not None:
+                o.EDID = item['EDID']
 
             primary = False
             if 'primary' in hsplit:
@@ -188,7 +192,7 @@ class XRandR(object):
                     o.rotations.add(r)
 
             currentname = None
-            for d, w, h in details:
+            for d, w, h in item['details']:
                 n, m = d[0:2]
                 k = m.strip("()")
                 try:
@@ -221,22 +225,46 @@ class XRandR(object):
         """
         items = []
         screenline = None
+
+        # parser states
+        is_edid = False
+        edid = None
+
+        # parse lines
         for l in xrandr_output.split('\n'):
-            if l.startswith("Screen "):
-                assert screenline is None
-                screenline = l
-            elif l.startswith('\t'):
-                # TODO edid parser
-                continue
-            elif l.startswith(2*' '): # [mode, width, height]
-                l = l.strip()
-                if reduce(bool.__or__, [l.startswith(x+':') for x in "hv"]):
-                    l = l[-len(l):l.index(" start")-len(l)]
-                    items[-1][1][-1].append(l[l.rindex(' '):])
-                else: # mode
-                    items[-1][1].append([l.split()])
+            if l.startswith('\t\t'):
+                # parsing meta
+                if is_edid:
+                    edid.append(l.strip())
             else:
-                items.append([l, []])
+                # not parsing meta, set all states to False
+                if is_edid:
+                    items[-1]['EDID'] = "".join(edid)
+                is_edid = False
+
+                # rest of parser
+                if l.startswith("Screen "):
+                    assert screenline is None
+                    screenline = l
+
+                elif l.startswith('\t'):
+                    if l.startswith('\tEDID:'):
+                        is_edid = True
+                        edid = []
+                    continue
+                elif l.startswith(2*' '): # [mode, width, height]
+                    l = l.strip()
+                    if reduce(bool.__or__, [l.startswith(x+':') for x in "hv"]):
+                        l = l[-len(l):l.index(" start")-len(l)]
+                        items[-1]['details'][-1].append(l[l.rindex(' '):])
+                    else: # mode
+                        items[-1]['details'].append([l.split()])
+                else:
+                    items.append({
+                        'headline': l,
+                        'EDID': None,
+                        'details': []
+                    })
         return screenline, items
 
     def _load_parse_screenline(self, screenline):
