@@ -4,7 +4,7 @@ import warnings
 import os
 
 
-DEFAULT_CONFIG_FILE = "~/.screenlayout/config.json"
+DEFAULT_CONFIG_FILE = os.path.expanduser("~/.screenlayout/config.json")
 
 
 class ConfigStore(object):
@@ -29,14 +29,14 @@ class ConfigStore(object):
             state (State): xrandr State object
             config (Configuration): xrandr Configuration object
         """
-        self.store[str(state.hash)] = config.commandlineargs()
+        self.store[str(state.hash)] = "xrandr " + " ".join(config.commandlineargs())
 
     def get_configuration(self, state):
         """load a configuration as command line args given a monitor state"""
         return self.store.get(str(state.hash), None)
 
 
-def auto():
+def auto(*args):
     """load configuration given current state, if available, and apply to X"""
     store = ConfigStore()
     store.load_config_store()
@@ -44,14 +44,14 @@ def auto():
     xr.load_from_x()
     tmp_config = store.get_configuration(xr.state)
     if tmp_config is not None:
-        xr.load_from_commandlineargs()
+        xr.load_from_commandlineargs(tmp_config)
         xr.save_to_x()
     else:
         # apply some sensible default configuration.
         pass
 
 
-def save():
+def save(*args):
     """save current screen configuration."""
     config_file_path = os.path.dirname(os.path.abspath(DEFAULT_CONFIG_FILE))
     if not os.path.isdir(config_file_path):

@@ -90,7 +90,7 @@ class XRandR(object):
         return lines
 
     def load_from_commandlineargs(self, commandline):
-        """Parse """
+        """Parse commandline args"""
         self.load_from_x()
 
         args = BetterList(commandline.split(" "))

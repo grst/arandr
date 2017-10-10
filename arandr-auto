@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+
+# ARandR -- Another XRandR GUI
+# Copyright (C) 2008 -- 2011 chrysn <chrysn@fsfe.org>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""Automatically load XRandR configuration based on screen state"""
+
+import sys
+import gettext
+import argparse
+
+from screenlayout.store import auto, save
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    parser_auto = subparsers.add_parser('load', help="Automatically attempts to load suitable configuration for "
+                                                     "current screen state")
+    parser_auto.set_defaults(func=auto)
+
+    parser_auto = subparsers.add_parser('save', help="Save current configuration to config file. ")
+    parser_auto.set_defaults(func=save)
+
+    args = parser.parse_args()
+    args.func(args)
+
