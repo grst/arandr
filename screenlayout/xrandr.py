@@ -42,7 +42,7 @@ class XRandR(object):
         if display:
             self.environ['DISPLAY'] = display
 
-        version_output = self._output("--version")
+        version_output = self._run_xrandr("--version")
         supported_versions = ["1.2", "1.3", "1.4", "1.5"]
         if not any(x in version_output for x in supported_versions) and not force_version:
             raise Exception("XRandR %s required."%"/".join(supported_versions))
@@ -51,14 +51,14 @@ class XRandR(object):
         if not " 1.2" in version_output:
             self.features.add(Feature.PRIMARY)
 
-    def _get_outputs(self):
+    @property
+    def outputs(self):
         assert self.state.outputs.keys() == self.configuration.outputs.keys()
         return self.state.outputs.keys()
-    outputs = property(_get_outputs)
 
     #################### calling xrandr ####################
 
-    def _output(self, *args):
+    def _run_xrandr(self, *args):
         p = subprocess.Popen(("xrandr",)+args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.environ)
         ret, err = p.communicate()
         status = p.wait()
@@ -68,12 +68,10 @@ class XRandR(object):
             warnings.warn("XRandR wrote to stderr, but did not report an error (Message was: %r)"%err)
         return ret
 
-    def _run(self, *args):
-        self._output(*args)
 
     #################### loading ####################
 
-    def load_from_string(self, data):
+    def load_from_shellscript(self, data):
         data = data.replace("%","%%")
         lines = data.split("\n")
         if lines[-1] == '': lines.pop() # don't create empty last line
@@ -86,12 +84,13 @@ class XRandR(object):
             raise FileLoadError('No recognized xrandr command in this shell script.')
         if len(xrandrlines)>1:
             raise FileLoadError('More than one xrandr line in this shell script.')
-        self._load_from_commandlineargs(lines[xrandrlines[0]].strip())
+        self.load_from_commandlineargs(lines[xrandrlines[0]].strip())
         lines[xrandrlines[0]] = '%(xrandr)s'
 
         return lines
 
-    def _load_from_commandlineargs(self, commandline):
+    def load_from_commandlineargs(self, commandline):
+        """Parse """
         self.load_from_x()
 
         args = BetterList(commandline.split(" "))
@@ -141,7 +140,7 @@ class XRandR(object):
 
         """
         if xrandr_output is None:
-            xrandr_output = self._output("--verbose")
+            xrandr_output = self._run_xrandr("--verbose")
 
         self.configuration = self.Configuration(self)
         self.state = self.State()
@@ -283,9 +282,11 @@ class XRandR(object):
     #################### saving ####################
 
     def save_to_shellscript_string(self, template=None, additional=None):
-        """Return a shellscript that will set the current configuration. Output can be parsed by load_from_string.
+        """Return a shellscript that will set the current configuration.
+        Output can be parsed by load_from_string.
 
-        You may specify a template, which must contain a %(xrandr)s parameter and optionally others, which will be filled from the additional dictionary."""
+        You may specify a template, which must contain a %(xrandr)s parameter and
+        optionally others, which will be filled from the additional dictionary."""
         if not template:
             template = self.DEFAULTTEMPLATE
         template = '\n'.join(template)+'\n'
@@ -294,11 +295,11 @@ class XRandR(object):
         if additional:
             d.update(additional)
 
-        return template%d
+        return template % d
 
     def save_to_x(self):
         self.check_configuration()
-        self._run(*self.configuration.commandlineargs())
+        self._run_xrandr(*self.configuration.commandlineargs())
 
     def check_configuration(self):
         vmax = self.state.virtual.max
@@ -335,6 +336,22 @@ class XRandR(object):
         def __repr__(self):
             return '<%s for %d Outputs, %d connected>' % (type(self).__name__, len(self.outputs), len([x for x in self.outputs.values() if x.connected]))
 
+        @property
+        def hash(self):
+            """return a hash that uniquely identifies the current screen state
+            (i.e. the EDIDs of connected screens), s.t the appropriate configuration
+            can be loaded. """
+            state_hash = []
+            for output in self.outputs.values():
+                if output.connected:
+                    try:
+                        edid = output.EDID
+                    except AttributeError:
+                        edid = None
+                    state_hash.append((output.name, edid))
+            state_hash.sort(key=lambda x: x[0])
+            return tuple(state_hash)
+
         class Virtual(object):
             def __init__(self, min, max):
                 self.min = min
@@ -356,11 +373,12 @@ class XRandR(object):
             self._xrandr = xrandr
 
         def __repr__(self):
-            return '<%s for %d Outputs, %d active>'%(type(self).__name__, len(self.outputs), len([x for x in self.outputs.values() if x.active]))
+            return '<%s for %d Outputs, %d active>' % (type(self).__name__, len(self.outputs),
+                                                       len([x for x in self.outputs.values() if x.active]))
 
         def commandlineargs(self):
             args = []
-            for on,o in self.outputs.items():
+            for on, o in self.outputs.items():
                 args.append("--output")
                 args.append(on)
                 if not o.active:
