@@ -1,11 +1,53 @@
-==========================
-ARandR: Another XRandR GUI
-==========================
+# ARandR-auto: A fork of "Another XRandR GUI"
 
 
-ARandR is designed to provide a simple visual front end for XRandR_. Relative monitor positions are shown graphically and can be changed in a drag-and-drop way.
+ARandR is designed to provide a simple visual front end for `XRandR`. Relative monitor positions are shown graphically and can be changed in a drag-and-drop way.
+
+**This fork provides features to automatically detect connected screens and to load and save appropriate configurations**
+
+## Installation and Usage notes specific for this fork
+
+### Usage
+* `arandr` opens the GUI. Clicking "Apply" will save the current configuration. 
+* `arandr-auto save`: Save the current configuration via command line
+* `arandr-auto load`: If available, load the configuration for the current screen setup. 
+
+### Installation
+Get the source from github
+```
+git clone git@github.com:grst/arandr-auto.git
+```
+
+And invoke the scripts from command line
+```
+./arandr
+./arandr-auto
+```
+
+To retrieve all dependencies it's easiest to install the unforked `arandr` package through your package manager (e.g. `apt-get`).
 
 
+### Creating a `udev` rule
+In order to automatically detect screens once connected you can hook `arandr-auto` into a udev-rule. 
+
+Edit (or create) the file `/etc/udev/rules.d`:
+```
+sudo vi /etc/udev/rules.d
+```
+
+Add the following line:
+```
+ACTION=="change", RUN+="xrandr-auto load"
+```
+
+Reload the udev rules:
+```
+sudo udevadm control --reload-rules
+```
+
+And you should be good to go!
+
+# Original ARandR README:
 
 Features
 --------
