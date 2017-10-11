@@ -3,9 +3,15 @@
 
 ARandR is designed to provide a simple visual front end for `XRandR`. Relative monitor positions are shown graphically and can be changed in a drag-and-drop way.
 
-**This fork provides features to automatically detect connected screens and to load and save appropriate configurations**
+## Idea and purpose of this fork
+This fork provides features to automatically detect connected screens and to load and save appropriate configurations. 
 
-## Installation and Usage notes specific for this fork
+Every (modern) screen provides *Extended Display Identification Data*. This data is used to identify which screens are currently connected to the computer. Once you have set-up the display configuration for your home, your workplace etc. `arandr-auto` uses this information to load the appropriate display configuration and apply it using `xrandr`. 
+
+Per default, display configurations are saved to `~/.screenlayout/config.json`.
+
+
+## Installation and usage notes specific for this fork
 
 ### Usage
 * `arandr` opens the GUI. Clicking "Apply" will save the current configuration. 
@@ -30,9 +36,9 @@ To retrieve all dependencies it's easiest to install the unforked `arandr` packa
 ### Creating a `udev` rule
 In order to automatically detect screens once connected you can hook `arandr-auto` into a udev-rule. 
 
-Edit (or create) the file `/etc/udev/rules.d`:
+Edit (or create) the file `/etc/udev/rules.d/95-monitors.rules`:
 ```
-sudo vi /etc/udev/rules.d
+sudo vi /etc/udev/rules.d/95-monitors.rules
 ```
 
 Add the following line:
