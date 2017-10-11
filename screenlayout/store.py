@@ -3,7 +3,6 @@ from screenlayout.xrandr import XRandR
 import warnings
 import os
 from config import config
-from time import sleep
 
 DEFAULT_CONFIG_FILE = os.path.expanduser(config['SCREEN_CONFIG_FILE'])
 
