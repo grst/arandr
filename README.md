@@ -6,31 +6,43 @@ ARandR is designed to provide a simple visual front end for `XRandR`. Relative m
 ## Idea and purpose of this fork
 This fork provides features to automatically detect connected screens and to load and save appropriate configurations. 
 
-Every (modern) screen provides *Extended Display Identification Data*. This data is used to identify which screens are currently connected to the computer. Once you have set-up the display configuration for your home, your workplace etc. `arandr-auto` uses this information to load the appropriate display configuration and apply it using `xrandr`. 
+Every (modern) screen provides *Extended Display Identification Data* (EDID). This data is used to identify which screens are currently connected to the computer. Once you have set-up the display configuration for your home, your workplace etc. `arandr-auto` uses this information to load the appropriate display configuration and apply it using `xrandr`. 
 
-Per default, display configurations are saved to `~/.screenlayout/config.json`.
+The display configurations are saved to a config file in `json` format. 
 
 
 ## Installation and usage notes specific for this fork
 
 ### Usage
-* `arandr` opens the GUI. Clicking "Apply" will save the current configuration. 
-* `arandr-auto save`: Save the current configuration via command line
-* `arandr-auto load`: If available, load the configuration for the current screen setup. 
+
 
 ### Installation
-Get the source from github
+To retrieve all dependencies it's easiest to install the original `arandr` package through your package manager (e.g. `apt-get`). Additionally, make sure to have the `at` command installed. 
+
+1. **Get the source from github**
 ```
 git clone git@github.com:grst/arandr-auto.git
 ```
 
-And invoke the scripts from command line
+2. **Adjust the configuration file:**
 ```
-./arandr
-./arandr-auto
+vi config.py
+```
+```python
+config = {
+    "SCREEN_CONFIG_FILE": '/home/XXX/.screenlayout/config.json', # path to your config file (will be created)
+    # the udev rule is run as root, so you need to specify how to connect to the X-Server
+    "DISPLAY": ":0", 
+    "XAUTHORITY": '/home/XXX/.Xauthority'
+}
 ```
 
-To retrieve all dependencies it's easiest to install the unforked `arandr` package through your package manager (e.g. `apt-get`).
+3. **You can now start the program from command line.**
+     * `./arandr` opens the GUI. Clicking "Apply" will save the current configuration. 
+     * `./arandr-auto save`: Save the current configuration via command line
+     * `./arandr-auto load`: If available, load the configuration for the current screen setup. 
+
+
 
 
 ### Creating a `udev` rule
@@ -43,7 +55,7 @@ sudo vi /etc/udev/rules.d/95-monitors.rules
 
 Add the following line:
 ```
-ACTION=="change", RUN+="xrandr-auto load"
+ACTION=="change", RUN+="/path/to/arandr-auto/arandr_udev.sh"
 ```
 
 Reload the udev rules:
