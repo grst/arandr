@@ -11,7 +11,7 @@ Every (modern) screen provides *Extended Display Identification Data*. This data
 Per default, display configurations are saved to `~/.screenlayout/config.json`.
 
 
-## Installation and Usage notes specific for this fork
+## Installation and usage notes specific for this fork
 
 ### Usage
 * `arandr` opens the GUI. Clicking "Apply" will save the current configuration. 
@@ -36,9 +36,9 @@ To retrieve all dependencies it's easiest to install the unforked `arandr` packa
 ### Creating a `udev` rule
 In order to automatically detect screens once connected you can hook `arandr-auto` into a udev-rule. 
 
-Edit (or create) the file `/etc/udev/rules.d`:
+Edit (or create) the file `/etc/udev/rules.d/95-monitors.rules`:
 ```
-sudo vi /etc/udev/rules.d
+sudo vi /etc/udev/rules.d/95-monitors.rules
 ```
 
 Add the following line:
