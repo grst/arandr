@@ -2,9 +2,10 @@ import json
 from screenlayout.xrandr import XRandR
 import warnings
 import os
+from config import config
+from time import sleep
 
-
-DEFAULT_CONFIG_FILE = os.path.expanduser("~/.screenlayout/config.json")
+DEFAULT_CONFIG_FILE = os.path.expanduser(config['SCREEN_CONFIG_FILE'])
 
 
 class ConfigStore(object):
@@ -36,7 +37,7 @@ class ConfigStore(object):
         return self.store.get(str(state.hash), None)
 
 
-def auto(*args):
+def load(*args):
     """load configuration given current state, if available, and apply to X"""
     store = ConfigStore()
     store.load_config_store()

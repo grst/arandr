@@ -23,6 +23,8 @@ import gobject, gtk
 from .auxiliary import Position, Size, NORMAL, ROTATIONS, InadequateConfiguration
 from .xrandr import XRandR, Feature
 from .snap import Snap
+from .store import save as save_config
+
 
 import gettext
 gettext.install('arandr')
@@ -106,6 +108,7 @@ class ARandRWidget(gtk.DrawingArea):
     def save_to_x(self):
         self._xrandr.save_to_x()
         self.load_from_x()
+        save_config()
 
     def save_to_file(self, file, template=None, additional=None):
         data = self._xrandr.save_to_shellscript_string(template, additional)

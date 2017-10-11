@@ -1,16 +1,16 @@
 # ARandR -- Another XRandR GUI
 # Copyright (C) 2008 -- 2011 chrysn <chrysn@fsfe.org>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -26,6 +26,8 @@ from . import widget
 from .metacity import show_keybinder
 
 from .meta import __version__, TRANSLATORS, COPYRIGHT, PROGRAMNAME, PROGRAMDESCRIPTION
+
+from .store import load as load_config
 
 #import os
 #os.environ['DISPLAY']=':0.0'
@@ -300,9 +302,11 @@ class Application(object):
     def run(self):
         gtk.main()
 
+
 def main():
     p = optparse.OptionParser(usage="%prog [savedfile]", description="Another XRandrR GUI", version="%%prog %s"%__version__)
-    p.add_option('--randr-display', help='Use D as display for xrandr (but still show the GUI on the display from the environment; e.g. `localhost:10.0`)', metavar='D')
+    p.add_option('--randr-display', help='Use D as display for xrandr (but still show the GUI on the '
+                                         'display from the environment; e.g. `localhost:10.0`)', metavar='D')
     p.add_option('--force-version', help='Even run with untested XRandR versions', action='store_true')
 
     (options, args) = p.parse_args()
@@ -312,6 +316,11 @@ def main():
         file_to_open = args[0]
     else:
         p.usage()
+
+    try:
+        load_config()
+    except IOError:
+        pass
 
     a = Application(
             file=file_to_open,

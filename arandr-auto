@@ -18,22 +18,22 @@
 
 """Automatically load XRandR configuration based on screen state"""
 
-import sys
-import gettext
+
 import argparse
 
-from screenlayout.store import auto, save
+from screenlayout.store import load, save
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers()
 
-    parser_auto = subparsers.add_parser('load', help="Automatically attempts to load suitable configuration for "
+    parser_load = subparsers.add_parser('load', help="Automatically attempts to load suitable configuration for "
                                                      "current screen state")
-    parser_auto.set_defaults(func=auto)
+    parser_load.set_defaults(func=load)
 
-    parser_auto = subparsers.add_parser('save', help="Save current configuration to config file. ")
-    parser_auto.set_defaults(func=save)
+    parser_save = subparsers.add_parser('save', help="Save current configuration to config file. ")
+    parser_save.set_defaults(func=save)
 
     args = parser.parse_args()
     args.func(args)

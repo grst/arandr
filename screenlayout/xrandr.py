@@ -22,6 +22,8 @@ import warnings
 
 from .auxiliary import BetterList, Size, Position, Geometry, FileLoadError, FileSyntaxError, InadequateConfiguration, Rotation, ROTATIONS, NORMAL, NamedSize
 
+from config import config
+
 import gettext
 gettext.install('arandr')
 
@@ -39,13 +41,18 @@ class XRandR(object):
         """Create proxy object and check for xrandr at `display`. Fail with
         untested versions unless `force_version` is True."""
         self.environ = dict(os.environ)
-        if display:
+
+        if 'DISPLAY' in config:
+            self.environ['DISPLAY'] = config['DISPLAY']
+        if 'XAUTHORITY' in config:
+            self.environ['XAUTHORITY'] = config['XAUTHORITY']
+        if display:  # CLI option overrides config
             self.environ['DISPLAY'] = display
 
         version_output = self._run_xrandr("--version")
         supported_versions = ["1.2", "1.3", "1.4", "1.5"]
         if not any(x in version_output for x in supported_versions) and not force_version:
-            raise Exception("XRandR %s required."%"/".join(supported_versions))
+            raise Exception("XRandR %s required." % "/".join(supported_versions))
 
         self.features = set()
         if not " 1.2" in version_output:
