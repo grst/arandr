@@ -40,16 +40,23 @@ def intermediate_config_workaround(store):
                 "eDP1",
                 "00ffffffffffff000daef21400000000161c0104a51f117802ee95a3544c99260f505400000001010101010101010101010101010101363680a0703820402e1e240035ad10000018000000fe004e3134304843472d4751320a20000000fe00434d4e0a202020202020202020000000fe004e3134304843472d4751320a2000bb",
             ),
-        ),
+        )
     }
     try:
         xr = XRandR()
         xr.load_from_x()
         intermediate_config_hash = FIX_CONFIGS[xr.state.hash]
-        intermediate_config = store.store[str(intermediate_config_hash)]
-        xr.load_from_commandlineargs(intermediate_config)
-        xr.save_to_x()
-        sleep(2)
+        n_active_screens = sum(x.active for x in xr.configuration.outputs.values())
+
+        # only execute this, if not all three screens are active yet.
+        # This rule might get triggered through udev at some point
+        # and would lead to the third screen being removed just
+        # to be re-added two seconds later.
+        if n_active_screens < len(xr.state.hash):
+            intermediate_config = store.store[str(intermediate_config_hash)]
+            xr.load_from_commandlineargs(intermediate_config)
+            xr.save_to_x()
+            sleep(2)
     except KeyError:
         print("Key error")
         pass
