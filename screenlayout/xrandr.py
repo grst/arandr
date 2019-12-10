@@ -25,6 +25,7 @@ from .auxiliary import BetterList, Size, Position, Geometry, FileLoadError, File
 from config import config
 
 import gettext
+import hashlib
 gettext.install('arandr')
 
 SHELLSHEBANG='#!/bin/sh'
@@ -352,7 +353,7 @@ class XRandR(object):
             for output in self.outputs.values():
                 if output.connected:
                     try:
-                        edid = output.EDID
+                        edid = hashlib.md5(output.EDID).hexdigest()
                     except AttributeError:
                         edid = None
                     state_hash.append((output.name, edid))
