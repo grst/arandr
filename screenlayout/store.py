@@ -74,7 +74,7 @@ class ConfigStore(object):
     def save_config_store(self, config_file=DEFAULT_CONFIG_FILE):
         """Write the curent config store to a json-file. """
         with open(config_file, "w") as f:
-            json.dump(self.store, f)
+            json.dump(self.store, f, indent=4)
 
     def add_config(self, state, config):
         """
